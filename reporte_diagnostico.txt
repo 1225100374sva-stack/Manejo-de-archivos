@@ -1,7 +1,20 @@
 === REPORTE DE DIAGNOSTICO DE RED ===
-Fecha de procesamiento: 2026-10-11
+Fecha de procesamiento: 2026-10-12
 Total de registros procesados: 50,000
 Lineas descartadas por formato invalido: 0
+
+--- ESTRUCTURA DE LOS DATOS (PRIMEROS 10 REGISTROS) ---
+Timestamp            IP_Origen        IP_Destino  Puerto_Destino  Protocolo  Accion  Bytes_Transferidos
+2026-10-06T08:00:00  192.168.1.125    10.0.0.2    3389 (RDP)      TCP        ALLOW                  200
+2026-10-06T08:00:00  185.220.101.5    10.0.0.5    22 (SSH)        TCP        DENY                     0
+2026-10-06T08:00:00  192.168.1.172    10.0.0.5    80 (HTTP)       TCP        ALLOW                  283
+2026-10-06T08:00:00  192.168.1.120    10.0.0.1    8080            TCP        ALLOW                1,300
+2026-10-06T08:00:00  192.168.1.35     10.0.0.5    80 (HTTP)       UDP        ALLOW                  970
+2026-10-06T08:00:00  192.168.1.144    10.0.0.1    80 (HTTP)       TCP        ALLOW                  959
+2026-10-06T08:00:00  192.168.1.74     10.0.0.1    3389 (RDP)      TCP        ALLOW                1,163
+2026-10-06T08:00:00  192.168.1.185    10.0.0.1    8080            TCP        ALLOW                  569
+2026-10-06T08:00:00  192.168.1.158    10.0.0.1    3389 (RDP)      UDP        ALLOW                  624
+2026-10-06T08:00:00  192.168.1.37     10.0.0.1    22 (SSH)        TCP        ALLOW                  746
 
 --- TOP 5 IP ORIGEN POR VOLUMEN DE DATOS (ALLOW) ---
 1. IP: 10.0.1.20       | Trafico: 2.21 GB

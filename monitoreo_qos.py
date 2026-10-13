@@ -7,16 +7,13 @@ Lee router_metrics.csv linea por linea y genera reporte_qos.txt con, por router:
   3. Violaciones de SLA (latencia promedio > 150 ms o perdida > 5%)
   4. Porcentaje de tiempo con el enlace en estado DOWN
 
-Uso:  python3 monitoreo_qos.py [archivo_metricas] [archivo_reporte]
+Uso:  python3 monitoreo_qos.py
 """
 
-import os
-import sys
 from datetime import date
 
-CARPETA = os.path.dirname(os.path.abspath(__file__))
-RUTA_METRICAS = os.path.join(CARPETA, "router_metrics.csv")
-RUTA_REPORTE = os.path.join(CARPETA, "reporte_qos.txt")
+RUTA_METRICAS = "router_metrics.csv"
+RUTA_REPORTE = "reporte_qos.txt"
 
 COLUMNAS_ESPERADAS = 7
 ESTADOS_VALIDOS = ("UP", "DEGRADED", "DOWN")
@@ -193,20 +190,17 @@ def guardar_reporte(texto, ruta_reporte):
 
 
 def main():
-    ruta_metricas = sys.argv[1] if len(sys.argv) > 1 else RUTA_METRICAS
-    ruta_reporte = sys.argv[2] if len(sys.argv) > 2 else RUTA_REPORTE
-
     try:
-        acumulados, total_validas, total_descartadas = procesar_metricas(ruta_metricas)
+        acumulados, total_validas, total_descartadas = procesar_metricas(RUTA_METRICAS)
     except FileNotFoundError:
-        print(f"No se encontro el archivo de metricas: {ruta_metricas}")
-        sys.exit(1)
+        print(f"No se encontro el archivo de metricas: {RUTA_METRICAS}")
+        return
 
     metricas = calcular_metricas(acumulados)
     texto = construir_reporte(metricas, total_validas, total_descartadas)
-    guardar_reporte(texto, ruta_reporte)
+    guardar_reporte(texto, RUTA_REPORTE)
     print(texto)
-    print(f"Reporte guardado en: {ruta_reporte}")
+    print(f"Reporte guardado en: {RUTA_REPORTE}")
 
 
 if __name__ == "__main__":

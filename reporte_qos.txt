@@ -1,5 +1,5 @@
 === REPORTE DE CALIDAD DE SERVICIO (QoS) EN ENLACES WAN ===
-Fecha de procesamiento: 2026-10-11
+Fecha de procesamiento: 2026-10-12
 Total de muestras procesadas: 50,000
 Lineas descartadas por formato invalido: 0
 Routers evaluados: 10

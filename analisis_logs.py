@@ -1,25 +1,15 @@
-"""
-Ejercicio 1: Analisis forense y metricas de trafico a partir de logs de red.
 
-Lee network_traffic.log linea por linea y genera reporte_diagnostico.txt con:
-  1. Top 5 de IP de origen por bytes transferidos (solo trafico ALLOW)
-  2. Posibles ataques de fuerza bruta contra SSH (22) o RDP (3389)
-  3. Distribucion del trafico por protocolo
+from datetime import datetime
 
-Uso:  python3 analisis_logs.py [archivo_log] [archivo_reporte]
-"""
-
-import os
-import sys
-from collections import defaultdict, deque
-from datetime import date, datetime
-
-CARPETA = os.path.dirname(os.path.abspath(__file__))
-RUTA_LOG = os.path.join(CARPETA, "network_traffic.log")
-RUTA_REPORTE = os.path.join(CARPETA, "reporte_diagnostico.txt")
+RUTA_LOG = "network_traffic.log"
+RUTA_REPORTE = "reporte_diagnostico.txt"
 
 COLUMNAS_ESPERADAS = 7
 CANTIDAD_TOP = 5
+
+# Cantidad de registros que se muestran en el reporte con sus 7 columnas
+CANTIDAD_MUESTRA = 10
+NOMBRES_PUERTOS = {80: "HTTP", 443: "HTTPS", 22: "SSH", 53: "DNS", 3389: "RDP"}
 
 # Parametros de deteccion: mas de UMBRAL_INTENTOS registros DENY desde una misma
 # IP hacia un puerto vigilado dentro de VENTANA_SEGUNDOS se considera un ataque.
@@ -72,13 +62,17 @@ def registrar_intento_denegado(registro, ventanas, sospechosos):
     VENTANA_SEGUNDOS, asi la memoria usada no crece con el tamano del archivo.
     """
     clave = (registro["ip_origen"], registro["puerto"])
+    if clave not in ventanas:
+        ventanas[clave] = []
+        sospechosos[clave] = {
+            "total_denegados": 0, "maximo_en_ventana": 0, "primera_alerta": None}
     ventana = ventanas[clave]
     ahora = registro["timestamp"]
     ventana.append(ahora)
 
     # Se descartan los intentos que ya quedaron fuera de la ventana de tiempo
     while (ahora - ventana[0]).total_seconds() > VENTANA_SEGUNDOS:
-        ventana.popleft()
+        ventana.pop(0)
 
     datos = sospechosos[clave]
     datos["total_denegados"] += 1
@@ -90,12 +84,17 @@ def registrar_intento_denegado(registro, ventanas, sospechosos):
 
 def procesar_log(ruta_log):
     """Recorre el archivo una sola vez acumulando todas las metricas."""
-    bytes_por_ip = defaultdict(int)          # solo trafico ALLOW
-    registros_por_protocolo = defaultdict(int)
-    bytes_por_protocolo = defaultdict(int)
-    ventanas = defaultdict(deque)
-    sospechosos = defaultdict(lambda: {
-        "total_denegados": 0, "maximo_en_ventana": 0, "primera_alerta": None})
+    bytes_por_ip = {}                        # solo trafico ALLOW
+    registros_por_protocolo = {}
+    bytes_por_protocolo = {}
+    for protocolo in PROTOCOLOS_VALIDOS:
+        registros_por_protocolo[protocolo] = 0
+        bytes_por_protocolo[protocolo] = 0
+    ventanas = {}
+    sospechosos = {}
+
+    # Solo se guardan los primeros registros para mostrarlos en el reporte
+    primeros_registros = []
 
     total_validos = 0
     total_descartados = 0
@@ -110,17 +109,21 @@ def procesar_log(ruta_log):
                 continue
 
             total_validos += 1
+            if len(primeros_registros) < CANTIDAD_MUESTRA:
+                primeros_registros.append(registro)
             registros_por_protocolo[registro["protocolo"]] += 1
             bytes_por_protocolo[registro["protocolo"]] += registro["bytes"]
 
             if registro["accion"] == "ALLOW":
-                bytes_por_ip[registro["ip_origen"]] += registro["bytes"]
+                ip = registro["ip_origen"]
+                bytes_por_ip[ip] = bytes_por_ip.get(ip, 0) + registro["bytes"]
             elif registro["puerto"] in PUERTOS_VIGILADOS:
                 registrar_intento_denegado(registro, ventanas, sospechosos)
 
     return {
         "total_validos": total_validos,
         "total_descartados": total_descartados,
+        "primeros_registros": primeros_registros,
         "bytes_por_ip": bytes_por_ip,
         "registros_por_protocolo": registros_por_protocolo,
         "bytes_por_protocolo": bytes_por_protocolo,
@@ -165,6 +168,26 @@ def formatear_bytes(cantidad):
     return f"{valor:.2f} TB"
 
 
+def describir_puerto(puerto):
+    """Agrega el nombre del servicio a los puertos conocidos, por ejemplo 22 (SSH)."""
+    if puerto in NOMBRES_PUERTOS:
+        return f"{puerto} ({NOMBRES_PUERTOS[puerto]})"
+    return str(puerto)
+
+
+def construir_tabla_registros(registros):
+    """Arma una tabla con las 7 columnas del log para los registros recibidos."""
+    formato = "{:<19}  {:<15}  {:<10}  {:<14}  {:<9}  {:<6}  {:>18}"
+    lineas = [formato.format("Timestamp", "IP_Origen", "IP_Destino", "Puerto_Destino",
+                             "Protocolo", "Accion", "Bytes_Transferidos")]
+    for registro in registros:
+        lineas.append(formato.format(
+            registro["timestamp"].isoformat(), registro["ip_origen"], registro["ip_destino"],
+            describir_puerto(registro["puerto"]), registro["protocolo"], registro["accion"],
+            f"{registro['bytes']:,}"))
+    return lineas
+
+
 def construir_reporte(resultados):
     """Arma el texto del reporte a partir de las metricas calculadas."""
     top_ips = obtener_top_ips(resultados["bytes_por_ip"], CANTIDAD_TOP)
@@ -174,12 +197,16 @@ def construir_reporte(resultados):
 
     lineas = [
         "=== REPORTE DE DIAGNOSTICO DE RED ===",
-        f"Fecha de procesamiento: {date.today().isoformat()}",
+        f"Fecha de procesamiento: {datetime.now().date().isoformat()}",
         f"Total de registros procesados: {total_registros:,}",
         f"Lineas descartadas por formato invalido: {resultados['total_descartados']:,}",
         "",
-        f"--- TOP {CANTIDAD_TOP} IP ORIGEN POR VOLUMEN DE DATOS (ALLOW) ---",
+        f"--- ESTRUCTURA DE LOS DATOS (PRIMEROS {len(resultados['primeros_registros'])} REGISTROS) ---",
     ]
+    lineas.extend(construir_tabla_registros(resultados["primeros_registros"]))
+
+    lineas.append("")
+    lineas.append(f"--- TOP {CANTIDAD_TOP} IP ORIGEN POR VOLUMEN DE DATOS (ALLOW) ---")
     for posicion, (ip, cantidad_bytes) in enumerate(top_ips, start=1):
         lineas.append(f"{posicion}. IP: {ip:<15} | Trafico: {formatear_bytes(cantidad_bytes)}")
 
@@ -217,19 +244,16 @@ def guardar_reporte(texto, ruta_reporte):
 
 
 def main():
-    ruta_log = sys.argv[1] if len(sys.argv) > 1 else RUTA_LOG
-    ruta_reporte = sys.argv[2] if len(sys.argv) > 2 else RUTA_REPORTE
-
     try:
-        resultados = procesar_log(ruta_log)
+        resultados = procesar_log(RUTA_LOG)
     except FileNotFoundError:
-        print(f"No se encontro el archivo de log: {ruta_log}")
-        sys.exit(1)
+        print(f"No se encontro el archivo de log: {RUTA_LOG}")
+        return
 
     texto = construir_reporte(resultados)
-    guardar_reporte(texto, ruta_reporte)
+    guardar_reporte(texto, RUTA_REPORTE)
     print(texto)
-    print(f"Reporte guardado en: {ruta_reporte}")
+    print(f"Reporte guardado en: {RUTA_REPORTE}")
 
 
 if __name__ == "__main__":
