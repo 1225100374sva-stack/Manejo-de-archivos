@@ -1,0 +1,46 @@
+=== REPORTE DE CALIDAD DE SERVICIO (QoS) EN ENLACES WAN ===
+Fecha de procesamiento: 2026-10-11
+Total de muestras procesadas: 50,000
+Lineas descartadas por formato invalido: 0
+Routers evaluados: 10
+
+--- LATENCIA PROMEDIO POR ROUTER ---
+- RTR-ARG-01    (10.200.8.1 ) | Latencia promedio:   39.71 ms
+- RTR-ARG-02    (10.200.9.1 ) | Latencia promedio:   27.53 ms
+- RTR-ARG-03    (10.200.10.1) | Latencia promedio:   27.45 ms
+- RTR-BOG-01    (10.200.5.1 ) | Latencia promedio:   27.59 ms
+- RTR-BOG-02    (10.200.6.1 ) | Latencia promedio:  265.30 ms
+- RTR-BOG-03    (10.200.7.1 ) | Latencia promedio:   27.20 ms
+- RTR-MEX-01    (10.200.1.1 ) | Latencia promedio:   27.56 ms
+- RTR-MEX-02    (10.200.2.1 ) | Latencia promedio:   27.53 ms
+- RTR-MEX-03    (10.200.3.1 ) | Latencia promedio:   27.19 ms
+- RTR-MEX-04    (10.200.4.1 ) | Latencia promedio:   27.63 ms
+
+--- PERDIDA DE PAQUETES POR ROUTER ---
+- RTR-ARG-01    | Perdidos:  96,527 de 506,800 | Perdida: 19.05%
+- RTR-ARG-02    | Perdidos:   5,017 de 499,700 | Perdida:  1.00%
+- RTR-ARG-03    | Perdidos:   4,931 de 493,100 | Perdida:  1.00%
+- RTR-BOG-01    | Perdidos:   4,981 de 498,100 | Perdida:  1.00%
+- RTR-BOG-02    | Perdidos:   7,492 de 495,900 | Perdida:  1.51%
+- RTR-BOG-03    | Perdidos:   4,943 de 495,400 | Perdida:  1.00%
+- RTR-MEX-01    | Perdidos:   5,047 de 496,500 | Perdida:  1.02%
+- RTR-MEX-02    | Perdidos:   5,088 de 506,600 | Perdida:  1.00%
+- RTR-MEX-03    | Perdidos:   4,954 de 502,300 | Perdida:  0.99%
+- RTR-MEX-04    | Perdidos:   5,048 de 505,600 | Perdida:  1.00%
+
+--- ALERTAS DE VIOLACION DE SLA ---
+Limites: latencia promedio > 150 ms o perdida de paquetes > 5%
+[ALERTA] RTR-ARG-01: perdida de paquetes 19.05% > 5%
+[ALERTA] RTR-BOG-02: latencia promedio 265.30 ms > 150 ms
+
+--- DISPONIBILIDAD DEL ENLACE (UPTIME) ---
+- RTR-ARG-01    | Tiempo en DOWN: 44.83% | Disponibilidad:  55.17%
+- RTR-ARG-02    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-ARG-03    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-BOG-01    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-BOG-02    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-BOG-03    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-MEX-01    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-MEX-02    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-MEX-03    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
+- RTR-MEX-04    | Tiempo en DOWN:  0.00% | Disponibilidad: 100.00%
